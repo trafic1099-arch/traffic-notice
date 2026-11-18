@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>نموذج إشعار حادث مروري</title>
 
-  <!-- إعدادات تحويل الموقع إلى تطبيق شاشة كاملة على الجوال (PWA) -->
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#006c35" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -22,7 +21,7 @@
 
   <div class="container">
 
-    <!-- ترويسة الصفحة (تختفي عند الطباعة) -->
+    <!-- ترويسة الصفحة -->
     <header class="top-header no-print">
       <div class="brand">
         <div class="logo-box">
@@ -30,11 +29,52 @@
         </div>
         <div>
           <h1>نموذج إشعار حادث مروري</h1>
-          <p>نظام ميداني سريع لإعداد ومشاركة الإشعارات</p>
+          <p id="welcomeSubtitle">نظام ميداني سريع لإعداد ومشاركة الإشعارات</p>
         </div>
       </div>
-      <button type="button" class="btn btn-light btn-sm" onclick="resetFormAll()">🔄 إشعار جديد</button>
+      <button type="button" class="btn btn-light btn-sm" onclick="resetFormAll()">🔄 جديد</button>
     </header>
+
+    <!-- شريط التعرف التلقائي على محرر الإشعار -->
+    <section class="profile-card no-print" id="profileSection">
+      <!-- وضع العرض بعد الحفظ -->
+      <div id="profileDisplayBar" class="profile-bar" style="display:none;">
+        <div class="profile-info">
+          <span>👤 محرر الإشعار: <strong id="displayOfficerName">-</strong></span>
+          <span id="displayPrintBadge" class="badge-status"></span>
+        </div>
+        <button type="button" class="btn-edit-profile" onclick="openProfileEditor()">تعديل ⚙️</button>
+      </div>
+
+      <!-- نموذج الإعداد (يظهر أول مرة أو عند الضغط على تعديل) -->
+      <div id="profileEditForm">
+        <div class="profile-form-title">👋 إعداد بياناتك على هذا الجوال (تُحفظ تلقائياً)</div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label for="officerName">الاسم:</label>
+            <input type="text" id="officerName" placeholder="اكتب اسمك هنا" />
+          </div>
+          <div class="form-group">
+            <label for="officerRank">الرتبة <span class="optional-tag">(اختياري)</span>:</label>
+            <input type="text" id="officerRank" placeholder="مثال: عريف، رقيب، ملازم..." />
+          </div>
+        </div>
+        <div class="profile-actions-row">
+          <label class="checkbox-label">
+            <input type="checkbox" id="showNameInNotice" checked />
+            <span>إظهار الاسم في أسفل الإشعار عند الطباعة والتصوير</span>
+          </label>
+          <button type="button" class="btn btn-primary btn-sm" onclick="saveOfficerProfile()">حفظ البيانات ✓</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- قوالب تعبئة سريعة بلمسة واحدة -->
+    <div class="templates-bar no-print">
+      <span class="templates-label">⚡ تعبئة سريعة:</span>
+      <button type="button" class="chip chip-gold" onclick="applyQuickTemplate('two_cars')">تصادم مركبتين (تلفيات فقط)</button>
+      <button type="button" class="chip chip-gold" onclick="applyQuickTemplate('public_prop')">ارتطام بممتلكات عامة</button>
+    </div>
 
     <!-- نموذج الإدخال -->
     <form id="accidentForm" class="no-print" onsubmit="event.preventDefault(); generateNotice();">
@@ -43,18 +83,43 @@
       <div class="card">
         <h2 class="card-title">📋 البيانات الأساسية للحادث</h2>
 
-        <div class="grid-2">
-          <div class="form-group">
-            <label for="hijriDate">التاريخ الهجري:</label>
-            <input type="text" id="hijriDate" placeholder="1448/05/28 هـ" required />
+        <!-- التاريخ الهجري الاحترافي -->
+        <div class="form-group">
+          <div class="label-with-action">
+            <label>التاريخ الهجري:</label>
+            <button type="button" class="btn-mini-action" onclick="setDefaultDateTime(true, false)">📅 اليوم</button>
           </div>
-
-          <div class="form-group">
-            <label for="accidentTime">وقت الحادث:</label>
-            <input type="time" id="accidentTime" required />
+          <div class="date-picker-row" dir="ltr">
+            <select id="hijriDay" aria-label="اليوم"></select>
+            <span class="sep">/</span>
+            <select id="hijriMonth" aria-label="الشهر"></select>
+            <span class="sep">/</span>
+            <select id="hijriYear" aria-label="السنة"></select>
           </div>
         </div>
 
+        <!-- وقت الحادث الاحترافي بأرقام إنجليزية -->
+        <div class="form-group">
+          <div class="label-with-action">
+            <label>وقت الحادث:</label>
+            <div class="time-quick-btns">
+              <button type="button" class="btn-mini-action" onclick="setDefaultDateTime(false, true)">الآن</button>
+              <button type="button" class="btn-mini-action" onclick="adjustTimeMinutes(-15)">-15 د</button>
+              <button type="button" class="btn-mini-action" onclick="adjustTimeMinutes(-30)">-30 د</button>
+            </div>
+          </div>
+          <div class="time-picker-row" dir="ltr">
+            <select id="timeHour" aria-label="الساعة"></select>
+            <span class="sep">:</span>
+            <select id="timeMinute" aria-label="الدقيقة"></select>
+            <select id="timePeriod" dir="rtl" aria-label="الفترة">
+              <option value="صباحاً">صباحاً</option>
+              <option value="مساءً">مساءً</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- موقع الحادث -->
         <div class="form-group">
           <div class="label-with-action">
             <label for="accidentLocation">موقع الحادث:</label>
@@ -65,6 +130,7 @@
           <input type="text" id="accidentLocation" placeholder="أدخل موقع الحادث أو اضغط جلب موقعي" required />
         </div>
 
+        <!-- الإجراءات المتخذة -->
         <div class="form-group">
           <label for="actionsTaken">الإجراءات المتخذة:</label>
           <div class="chips">
@@ -81,7 +147,12 @@
       <div class="card">
         <div class="card-header-row">
           <h2 class="card-title">🚗 أطراف الحادث</h2>
-          <button type="button" class="btn btn-outline btn-sm" onclick="addParty()">+ إضافة طرف</button>
+          <div style="display:flex; gap:6px;">
+            <button type="button" id="swapPartiesBtn" class="btn btn-outline btn-sm" style="display:none;" onclick="swapFirstTwoParties()" title="عكس الطرف الأول والثاني">
+              ⇅ تبديل
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="addParty()">+ إضافة طرف</button>
+          </div>
         </div>
         <div id="partiesContainer"></div>
       </div>
@@ -108,9 +179,9 @@
       <div class="export-bar no-print">
         <span>📄 الإشعار الجاهز</span>
         <div class="export-actions">
-          <button type="button" class="btn btn-primary btn-sm" onclick="shareNoticeImage()">📲 مشاركة الصورة مباشرة</button>
-          <button type="button" class="btn btn-outline btn-sm" onclick="downloadAsImage()">📸 حفظ كصورة</button>
-          <button type="button" class="btn btn-light btn-sm" onclick="window.print()">🖨️ طباعة / PDF</button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="shareNoticeImage()">📲 مشاركة الصورة</button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="downloadAsImage()">📸 حفظ صورة</button>
+          <button type="button" class="btn btn-light btn-sm" onclick="window.print()">🖨️ طباعة</button>
           <button type="button" class="btn btn-light btn-sm" onclick="copyForWhatsApp()">📋 نسخ نص</button>
         </div>
       </div>
@@ -129,7 +200,7 @@
           </div>
 
           <div class="doc-left">
-            <div><strong>التاريخ الهجري:</strong> <span id="outHijriDate">-</span></div>
+            <div><strong>التاريخ الهجري:</strong> <span id="outHijriDate" dir="ltr">-</span></div>
             <div><strong>وقت الحادث:</strong> <span id="outTime">-</span></div>
             <div><strong>الموقع:</strong> <span id="outLocation">-</span></div>
           </div>
@@ -152,7 +223,7 @@
         </table>
 
         <div class="doc-footer">
-          <span>تم إعداد الإشعار إلكترونياً</span>
+          <span id="outOfficerFooter">تم إعداد الإشعار إلكترونياً</span>
           <span id="outGeneratedStamp"></span>
         </div>
       </div>
@@ -160,7 +231,7 @@
 
   </div>
 
-  <!-- شريط أزرار سفلي ثابت بمتناول الإبهام على الجوال -->
+  <!-- شريط أزرار سفلي ثابت بمتناول الإبهام -->
   <div class="sticky-bottom-bar no-print">
     <button type="button" class="btn btn-outline" onclick="addParty()">+ إضافة طرف</button>
     <button type="button" class="btn btn-primary" onclick="generateNotice()">✅ إنشاء الإشعار</button>

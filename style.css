@@ -28,7 +28,7 @@ body {
   background-color: var(--bg-page);
   color: var(--text-main);
   line-height: 1.6;
-  padding: 14px 12px 96px; /* مساحة سفلية للشريط الثابت */
+  padding: 12px 12px 96px;
 }
 
 .container {
@@ -37,19 +37,19 @@ body {
 }
 
 /* ==========================================================================
-   2. الترويسة والشعار
+   2. الترويسة وبطاقة التعرف التلقائي على المستخدم
    ========================================================================== */
 .top-header {
   background: linear-gradient(135deg, var(--primary-dark), var(--primary));
   color: #fff;
   border-radius: var(--radius);
-  padding: 14px 18px;
-  margin-bottom: 14px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
   box-shadow: var(--shadow);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
   border-bottom: 4px solid var(--accent);
 }
 
@@ -60,11 +60,11 @@ body {
 }
 
 .logo-box {
-  width: 58px;
-  height: 58px;
+  width: 54px;
+  height: 54px;
   background: #ffffff;
   border-radius: 10px;
-  padding: 5px;
+  padding: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -79,30 +79,145 @@ body {
 }
 
 .top-header h1 {
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   font-weight: 800;
   line-height: 1.3;
 }
 
 .top-header p {
   font-size: 0.82rem;
-  opacity: 0.9;
+  opacity: 0.92;
+}
+
+/* بطاقة بيانات المستخدم (localStorage) */
+.profile-card {
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-right: 4px solid var(--accent);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.profile-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.profile-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+}
+
+.badge-status {
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.badge-status.on {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.badge-status.off {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.btn-edit-profile {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  color: var(--text-main);
+  padding: 4px 10px;
+  border-radius: 7px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.profile-form-title {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--primary-dark);
+  margin-bottom: 10px;
+}
+
+.optional-tag {
+  font-weight: 500;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.profile-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+/* شريط القوالب السريعة */
+.templates-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.templates-label {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+.chip-gold {
+  background: #fef9c3 !important;
+  color: #854d0e !important;
+  border-color: #fde047 !important;
 }
 
 /* ==========================================================================
-   3. البطاقات والحقول
+   3. البطاقات والحقول ومنتقي التاريخ والوقت
    ========================================================================== */
 .card {
   background: var(--bg-card);
   border-radius: var(--radius);
-  padding: 18px 16px;
+  padding: 16px 14px;
   margin-bottom: 14px;
   box-shadow: var(--shadow);
   border: 1px solid #e2e8f0;
 }
 
 .card-title {
-  font-size: 1.05rem;
+  font-size: 1.03rem;
   font-weight: 800;
   color: var(--primary-dark);
   margin-bottom: 14px;
@@ -131,15 +246,8 @@ body {
   gap: 12px;
 }
 
-.grid-3 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-
 @media (max-width: 640px) {
-  .grid-2,
-  .grid-3 {
+  .grid-2 {
     grid-template-columns: 1fr;
   }
 }
@@ -172,26 +280,93 @@ body {
   margin-bottom: 0;
 }
 
+/* أزرار التحكم المصغرة للتاريخ والوقت */
+.time-quick-btns {
+  display: flex;
+  gap: 5px;
+}
+
+.btn-mini-action {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  border: 1px solid #b7e1c9;
+  border-radius: 14px;
+  padding: 3px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-mini-action:active {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* منتقي التاريخ الهجري والوقت بأرقام إنجليزية */
+.date-picker-row,
+.time-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f8fafc;
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+}
+
+.date-picker-row select,
+.time-picker-row select {
+  font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  text-align: center;
+  padding: 9px 6px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+}
+
+#hijriDay { width: 72px; flex-shrink: 0; }
+#hijriMonth { flex: 1; font-family: 'Tajawal', sans-serif; }
+#hijriYear { width: 88px; flex-shrink: 0; }
+
+#timeHour,
+#timeMinute {
+  flex: 1;
+}
+
+#timePeriod {
+  width: 96px;
+  flex-shrink: 0;
+  font-family: 'Tajawal', sans-serif !important;
+  background: var(--primary-light) !important;
+  color: var(--primary-dark) !important;
+  border-color: #b7e1c9 !important;
+}
+
+.sep {
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+}
+
 /* زر GPS */
 .btn-gps {
   background: #eff6ff;
   color: #1d4ed8;
   border: 1px solid #bfdbfe;
   border-radius: 20px;
-  padding: 4px 12px;
-  font-size: 0.82rem;
+  padding: 4px 11px;
+  font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
 }
 
-.btn-gps:hover,
 .btn-gps:active {
   background: #1d4ed8;
   color: #fff;
 }
 
-/* عدّاد الهوية 10 أرقام */
+/* عدّاد الهوية */
 .id-counter {
   font-size: 0.78rem;
   font-weight: 700;
@@ -216,18 +391,15 @@ input.input-valid {
   background-color: #f0fdf4 !important;
 }
 
-/* حقول الإدخال بحجم مريح للجوال */
 input[type="text"],
 input[type="tel"],
-input[type="number"],
-input[type="time"],
 select,
 textarea {
   width: 100%;
-  padding: 11px 12px;
+  padding: 10px 12px;
   border: 1.5px solid var(--border);
   border-radius: 9px;
-  font-size: 1rem; /* يمنع تكبير الشاشة التلقائي في الآيفون */
+  font-size: 1rem;
   color: var(--text-main);
   background: #fff;
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -242,15 +414,15 @@ textarea:focus {
 }
 
 textarea {
-  min-height: 80px;
+  min-height: 78px;
   resize: vertical;
 }
 
-/* أزرار الاختيارات السريعة (Chips) */
+/* أزرار الاختيارات السريعة */
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 5px;
   margin-bottom: 8px;
 }
 
@@ -259,18 +431,24 @@ textarea {
   color: var(--primary-dark);
   border: 1px solid #b7e1c9;
   border-radius: 20px;
-  padding: 5px 11px;
-  font-size: 0.82rem;
+  padding: 4px 10px;
+  font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
   user-select: none;
-  transition: all 0.15s;
 }
 
 .chip:active,
 .chip:hover {
   background: var(--primary);
   color: #fff;
+}
+
+.chip-year {
+  background: #f1f5f9;
+  color: #334155;
+  border-color: #cbd5e1;
+  font-family: 'Segoe UI', sans-serif;
 }
 
 /* ==========================================================================
@@ -299,7 +477,6 @@ textarea {
   font-weight: 800;
   font-size: 1.1rem !important;
   padding: 4px !important;
-  text-transform: uppercase;
 }
 
 .plate-divider {
@@ -316,10 +493,11 @@ textarea {
   font-size: 1.1rem !important;
   letter-spacing: 2px;
   direction: ltr;
+  font-family: 'Segoe UI', sans-serif;
 }
 
 /* ==========================================================================
-   5. بطاقات الأطراف القابلة للطيّ (Accordion) والمرافقين
+   5. بطاقات الأطراف القابلة للطيّ والمرافقين
    ========================================================================== */
 .party-box {
   border: 1.5px solid #cbd5e1;
@@ -334,7 +512,7 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 14px;
+  padding: 11px 12px;
   background: #f1f5f9;
   cursor: pointer;
   gap: 8px;
@@ -360,7 +538,7 @@ textarea {
 }
 
 .party-summary-text {
-  font-size: 0.86rem;
+  font-size: 0.85rem;
   font-weight: 700;
   color: var(--text-main);
 }
@@ -372,17 +550,17 @@ textarea {
 }
 
 .party-toggle-icon {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: var(--primary-dark);
   background: #fff;
   border: 1px solid #cbd5e1;
-  padding: 4px 9px;
+  padding: 4px 8px;
   border-radius: 6px;
 }
 
 .party-body {
-  padding: 14px;
+  padding: 14px 12px;
   border-top: 1px dashed #cbd5e1;
 }
 
@@ -428,7 +606,6 @@ textarea {
   font-weight: 700;
   border: none;
   cursor: pointer;
-  transition: all 0.2s;
 }
 
 .btn-primary {
@@ -436,7 +613,6 @@ textarea {
   color: #fff;
 }
 
-.btn-primary:hover,
 .btn-primary:active {
   background: var(--primary-dark);
 }
@@ -447,11 +623,6 @@ textarea {
   border: 1.5px solid var(--primary);
 }
 
-.btn-outline:hover,
-.btn-outline:active {
-  background: var(--primary-light);
-}
-
 .btn-light {
   background: rgba(255, 255, 255, 0.16);
   color: #fff;
@@ -459,30 +630,24 @@ textarea {
 }
 
 .btn-sm {
-  padding: 6px 11px;
-  font-size: 0.83rem;
+  padding: 6px 10px;
+  font-size: 0.82rem;
 }
 
 .btn-danger-sm {
   background: #fee2e2;
   color: var(--danger);
-  padding: 4px 9px;
+  padding: 4px 8px;
   font-size: 0.8rem;
   border-radius: 6px;
 }
 
-.btn-danger-sm:hover {
-  background: var(--danger);
-  color: #fff;
-}
-
-/* الشريط السفلي الثابت على الجوال */
 .sticky-bottom-bar {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(255, 255, 255, 0.96);
+  background: rgba(255, 255, 255, 0.97);
   backdrop-filter: blur(8px);
   border-top: 1px solid #cbd5e1;
   padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
@@ -516,13 +681,13 @@ textarea {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
   font-weight: 700;
 }
 
 .export-actions {
   display: flex;
-  gap: 7px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
@@ -531,7 +696,7 @@ textarea {
   border: 2px solid #1e293b;
   border-top: none;
   border-radius: 0 0 var(--radius) var(--radius);
-  padding: 22px 20px;
+  padding: 22px 18px;
   color: #0f172a;
 }
 
@@ -546,7 +711,7 @@ textarea {
 }
 
 .doc-right {
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   font-weight: 700;
   line-height: 1.65;
   color: var(--primary-dark);
@@ -557,15 +722,15 @@ textarea {
 }
 
 .print-logo {
-  width: 74px;
-  height: 74px;
+  width: 72px;
+  height: 72px;
   object-fit: contain;
   margin: 0 auto 6px;
   display: block;
 }
 
 .doc-center h2 {
-  font-size: 1.18rem;
+  font-size: 1.15rem;
   font-weight: 800;
   color: #0f172a;
   background: var(--primary-light);
@@ -640,11 +805,11 @@ textarea {
   border-top: 1px solid #cbd5e1;
   display: flex;
   justify-content: space-between;
-  font-size: 0.82rem;
-  color: #475569;
+  font-size: 0.83rem;
+  font-weight: 700;
+  color: #334155;
 }
 
-/* إشعار منبثق */
 .toast {
   position: fixed;
   bottom: 78px;
@@ -668,9 +833,6 @@ textarea {
   opacity: 1;
 }
 
-/* ==========================================================================
-   8. إعدادات الطباعة
-   ========================================================================== */
 @media print {
   @page {
     size: A4 portrait;
