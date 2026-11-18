@@ -1,24 +1,33 @@
 /* ==========================================================================
    إعدادات وثوابت النظام
    ========================================================================== */
-const STORAGE_KEY = 'traffic_notice_draft_v1';
+const STORAGE_KEY = 'traffic_notice_draft_v2';
 const ordinalNames = [
   'الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس',
   'السادس', 'السابع', 'الثامن', 'التاسع', 'العاشر'
 ];
 
-// تشغيل الوظائف الأساسية بمجرد فتح الصفحة
+const commonCars = [
+  'كامري', 'هايلوكس', 'سوناتا', 'إلنترا', 'أكسنت', 'يارس',
+  'شاص', 'ربع', 'كورولا', 'تورس', 'فورد', 'جمس'
+];
+
+const commonNationalities = [
+  'سعودي', 'مصري', 'يمني', 'باكستاني',
+  'هندي', 'سوداني', 'بنجلاديشي', 'فلبيني'
+];
+
 document.addEventListener('DOMContentLoaded', () => {
   const restored = loadDraft();
   if (!restored) {
     setDefaultDateTime();
-    addParty(); // إضافة الطرف الأول تلقائياً
+    addParty();
   }
   setupAutoSave();
 });
 
 /* ==========================================================================
-   1. التعبئة التلقائية للتاريخ الهجري والوقت والعبارات السريعة
+   1. التاريخ الهجري والوقت وجلب الموقع بالـ GPS
    ========================================================================== */
 function setDefaultDateTime() {
   try {
@@ -49,28 +58,96 @@ function appendText(fieldId, text) {
   saveDraft();
 }
 
+function fetchCurrentLocation() {
+  const btn = document.getElementById('gpsBtn');
+  const locInput = document.getElementById('accidentLocation');
+
+  if (!navigator.geolocation) {
+    showToast('المتصفح لا يدعم تحديد الموقع GPS');
+    return;
+  }
+
+  btn.textContent = '⏳ جاري التحديد...';
+  btn.disabled = true;
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      try {
+        const { latitude, longitude } = pos.coords;
+        const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&accept-language=ar`;
+        const res = await fetch(url);
+        const data = await res.json();
+        const addr = data.address || {};
+
+        const road = addr.road || addr.pedestrian || addr.highway || '';
+        const district = addr.suburb || addr.neighbourhood || addr.quarter || '';
+        const city = addr.city || addr.town || addr.village || addr.county || '';
+
+        const formatted = [road, district, city].filter(Boolean).join('، ');
+        locInput.value = formatted || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+        saveDraft();
+        showToast('تم جلب الموقع الحالي بنجاح');
+      } catch (err) {
+        showToast('تعذر جلب اسم الشارع، تأكد من الاتصال بالإنترنت');
+      } finally {
+        btn.textContent = '📍 جلب موقعي الحالي';
+        btn.disabled = false;
+      }
+    },
+    () => {
+      btn.textContent = '📍 جلب موقعي الحالي';
+      btn.disabled = false;
+      showToast('يرجى السماح بصلاحية الموقع (GPS) من إعدادات الجوال');
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
 /* ==========================================================================
-   2. إدارة الأطراف والمرافقين (إضافة / حذف / تخصيص الحقول)
+   2. إدارة بطاقات الأطراف واللوحة الذكية وعدّاد الهوية
    ========================================================================== */
-function addParty(data = {}) {
+function addParty(data = {}, autoCollapseOthers = true) {
   const container = document.getElementById('partiesContainer');
+
+  // طيّ البطاقات السابقة تلقائياً لتوفير مساحة على شاشة الجوال
+  if (autoCollapseOthers) {
+    container.querySelectorAll('.party-box').forEach(box => {
+      box.classList.add('collapsed');
+      updatePartyHeaderSummary(box);
+    });
+  }
+
   const index = container.children.length;
   const partyLabel = ordinalNames[index] || `رقم ${index + 1}`;
   const partyType = data.type || 'مركبة';
-  const hideVehicle = (partyType === 'مشاة' || partyType === 'ممتلكات عامة' || partyType === 'ممتلكات خاصة');
+  const isNonVehicle = (partyType === 'مشاة' || partyType === 'ممتلكات عامة' || partyType === 'ممتلكات خاصة');
+
+  const carChipsHtml = commonCars.map(car =>
+    `<span class="chip" onclick="selectCarModel(this, '${car}')">${car}</span>`
+  ).join('');
+
+  const natChipsHtml = commonNationalities.map(nat =>
+    `<span class="chip" onclick="selectQuickValue(this, '.p-nationality', '${nat}')">${nat}</span>`
+  ).join('');
 
   const partyDiv = document.createElement('div');
   partyDiv.className = 'party-box';
   partyDiv.innerHTML = `
-    <div class="party-header">
-      <span class="party-badge">الطرف ${partyLabel}</span>
-      ${index > 0 ? `<button type="button" class="btn btn-danger-sm" onclick="removeParty(this)">حذف الطرف ✕</button>` : ''}
+    <div class="party-header" onclick="togglePartyCollapse(this, event)">
+      <div class="party-header-info">
+        <span class="party-badge">الطرف ${partyLabel}</span>
+        <span class="party-summary-text"></span>
+      </div>
+      <div class="party-header-actions">
+        ${index > 0 ? `<button type="button" class="btn btn-danger-sm" onclick="removeParty(this, event)">حذف ✕</button>` : ''}
+        <span class="party-toggle-icon">طيّ ▲</span>
+      </div>
     </div>
 
-    <div class="grid-2">
+    <div class="party-body">
       <div class="form-group">
         <label>نوع الطرف:</label>
-        <select class="p-type" onchange="toggleVehicleField(this); saveDraft();">
+        <select class="p-type" onchange="toggleVehicleField(this); updatePartyHeaderSummary(this.closest('.party-box')); saveDraft();">
           <option value="مركبة" ${partyType === 'مركبة' ? 'selected' : ''}>مركبة</option>
           <option value="مشاة" ${partyType === 'مشاة' ? 'selected' : ''}>مشاة</option>
           <option value="دراجة نارية" ${partyType === 'دراجة نارية' ? 'selected' : ''}>دراجة نارية</option>
@@ -79,46 +156,80 @@ function addParty(data = {}) {
         </select>
       </div>
 
-      <div class="form-group vehicle-field-group" style="${hideVehicle ? 'display:none;' : ''}">
-        <label>نوع المركبة ورقم اللوحة:</label>
-        <input type="text" class="p-vehicle" placeholder="مثال: كامري 2020 | لوحة: أ ب ج 1234" value="${escapeHtml(data.vehicle || '')}" />
-      </div>
-    </div>
+      <div class="vehicle-field-group" style="${isNonVehicle ? 'display:none;' : ''}">
+        <div class="form-group">
+          <label>نوع وموديل المركبة:</label>
+          <div class="chips">${carChipsHtml}</div>
+          <input type="text" class="p-vehicle-model" placeholder="مثال: كامري 2020"
+                 value="${escapeHtml(data.vehicleModel || '')}"
+                 oninput="updatePartyHeaderSummary(this.closest('.party-box'))" />
+        </div>
 
-    <div class="grid-2">
-      <div class="form-group">
-        <label class="driver-name-label">${hideVehicle ? 'اسم الطرف / المسؤول:' : 'اسم السائق:'}</label>
-        <input type="text" class="p-name" placeholder="الاسم الكامل" value="${escapeHtml(data.name || '')}" />
+        <div class="form-group">
+          <label>رقم اللوحة (3 حروف + 4 أرقام):</label>
+          <div class="plate-builder">
+            <div class="plate-letters">
+              <input type="text" class="plate-letter p-plate-l1" maxlength="1" placeholder="أ" value="${escapeHtml(data.plateL1 || '')}" />
+              <input type="text" class="plate-letter p-plate-l2" maxlength="1" placeholder="ب" value="${escapeHtml(data.plateL2 || '')}" />
+              <input type="text" class="plate-letter p-plate-l3" maxlength="1" placeholder="ج" value="${escapeHtml(data.plateL3 || '')}" />
+            </div>
+            <div class="plate-divider"></div>
+            <input type="tel" inputmode="numeric" maxlength="4" class="plate-nums p-plate-nums" placeholder="1234" value="${escapeHtml(data.plateNums || '')}" />
+          </div>
+        </div>
       </div>
 
-      <div class="grid-3" style="gap:10px;">
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="driver-name-label">${isNonVehicle ? 'اسم الطرف / المسؤول:' : 'اسم السائق:'}</label>
+          <input type="text" class="p-name" placeholder="الاسم الكامل"
+                 value="${escapeHtml(data.name || '')}"
+                 oninput="updatePartyHeaderSummary(this.closest('.party-box'))" />
+        </div>
+
+        <div class="form-group">
+          <div class="label-with-action">
+            <label>رقم الهوية / الإقامة:</label>
+            <span class="id-counter">0/10</span>
+          </div>
+          <input type="tel" inputmode="numeric" maxlength="10" class="p-id" placeholder="10 أرقام"
+                 value="${escapeHtml(data.idNumber || '')}"
+                 oninput="handleIdInput(this)" />
+        </div>
+      </div>
+
+      <div class="grid-2">
         <div class="form-group">
           <label>العمر:</label>
-          <input type="number" class="p-age" placeholder="مثال: 26" min="1" max="120" value="${escapeHtml(data.age || '')}" />
+          <input type="tel" inputmode="numeric" maxlength="3" class="p-age" placeholder="مثال: 26"
+                 value="${escapeHtml(data.age || '')}"
+                 oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
         </div>
 
         <div class="form-group">
           <label>الجنسية:</label>
-          <input type="text" class="p-nationality" placeholder="الجنسية" value="${escapeHtml(data.nationality || '')}" />
-        </div>
-
-        <div class="form-group">
-          <label>رقم الهوية:</label>
-          <input type="text" class="p-id" placeholder="رقم الهوية" value="${escapeHtml(data.idNumber || '')}" />
+          <div class="chips">${natChipsHtml}</div>
+          <input type="text" class="p-nationality" placeholder="اختر أو اكتب الجنسية"
+                 value="${escapeHtml(data.nationality || '')}" />
         </div>
       </div>
-    </div>
 
-    <div class="companions-area">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <span style="font-size:0.86rem; color:var(--text-muted); font-weight:600;">المرافقون (إن وجد):</span>
-        <button type="button" class="btn btn-primary btn-sm" onclick="addCompanion(this)">+ إضافة مرافق</button>
+      <div class="companions-area">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:0.88rem; color:var(--text-muted); font-weight:700;">المرافقون (إن وجد):</span>
+          <button type="button" class="btn btn-primary btn-sm" onclick="addCompanion(this)">+ إضافة مرافق</button>
+        </div>
+        <div class="companions-list"></div>
       </div>
-      <div class="companions-list"></div>
     </div>
   `;
 
   container.appendChild(partyDiv);
+  setupPlateAutoAdvance(partyDiv);
+
+  // تحديث عدّاد الهوية إذا كانت محملة مسبقاً
+  const idInput = partyDiv.querySelector('.p-id');
+  if (idInput.value) handleIdInput(idInput);
 
   if (Array.isArray(data.companions)) {
     const addBtn = partyDiv.querySelector('.companions-area button');
@@ -126,7 +237,111 @@ function addParty(data = {}) {
   }
 
   reindexParties();
+  updatePartyHeaderSummary(partyDiv);
   saveDraft();
+}
+
+// التنقل التلقائي بين خانات حروف وأرقام اللوحة
+function setupPlateAutoAdvance(partyDiv) {
+  const l1 = partyDiv.querySelector('.p-plate-l1');
+  const l2 = partyDiv.querySelector('.p-plate-l2');
+  const l3 = partyDiv.querySelector('.p-plate-l3');
+  const nums = partyDiv.querySelector('.p-plate-nums');
+  const fields = [l1, l2, l3, nums];
+
+  fields.forEach((field, idx) => {
+    field.addEventListener('input', () => {
+      if (idx < 3) {
+        field.value = field.value.replace(/[\s0-9]/g, '');
+        if (field.value.length === 1 && fields[idx + 1]) {
+          fields[idx + 1].focus();
+        }
+      } else {
+        field.value = field.value.replace(/[^0-9]/g, '');
+      }
+      updatePartyHeaderSummary(partyDiv);
+      saveDraft();
+    });
+
+    field.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && field.value === '' && idx > 0) {
+        fields[idx - 1].focus();
+      }
+    });
+  });
+}
+
+function getFormattedVehicleString(partyBox) {
+  const model = partyBox.querySelector('.p-vehicle-model').value.trim();
+  const l1 = partyBox.querySelector('.p-plate-l1').value.trim();
+  const l2 = partyBox.querySelector('.p-plate-l2').value.trim();
+  const l3 = partyBox.querySelector('.p-plate-l3').value.trim();
+  const nums = partyBox.querySelector('.p-plate-nums').value.trim();
+
+  const letters = [l1, l2, l3].filter(Boolean).join(' ');
+  const plateFull = [letters, nums].filter(Boolean).join(' ');
+  const platePart = plateFull ? `لوحة: ${plateFull}` : '';
+
+  return [model, platePart].filter(Boolean).join(' | ');
+}
+
+function selectCarModel(chipEl, carName) {
+  const box = chipEl.closest('.party-box');
+  const input = box.querySelector('.p-vehicle-model');
+  input.value = `${carName} `;
+  input.focus();
+  updatePartyHeaderSummary(box);
+  saveDraft();
+}
+
+function selectQuickValue(chipEl, selector, val) {
+  const parent = chipEl.closest('.companion-item') || chipEl.closest('.party-box');
+  const input = parent.querySelector(selector);
+  input.value = val;
+  saveDraft();
+}
+
+function handleIdInput(inputEl) {
+  inputEl.value = inputEl.value.replace(/[^0-9]/g, '');
+  const len = inputEl.value.length;
+  const counter = inputEl.closest('.form-group').querySelector('.id-counter');
+
+  counter.textContent = len === 10 ? '✓ 10/10' : `${len}/10`;
+  counter.classList.remove('valid', 'partial');
+  inputEl.classList.remove('input-valid');
+
+  if (len === 10) {
+    counter.classList.add('valid');
+    inputEl.classList.add('input-valid');
+  } else if (len > 0) {
+    counter.classList.add('partial');
+  }
+}
+
+function togglePartyCollapse(headerEl, event) {
+  if (event.target.closest('button')) return;
+  const box = headerEl.closest('.party-box');
+  box.classList.toggle('collapsed');
+  updatePartyHeaderSummary(box);
+}
+
+function updatePartyHeaderSummary(box) {
+  const isCollapsed = box.classList.contains('collapsed');
+  const icon = box.querySelector('.party-toggle-icon');
+  const summaryEl = box.querySelector('.party-summary-text');
+
+  icon.textContent = isCollapsed ? 'تعديل ▼' : 'طيّ ▲';
+
+  if (!isCollapsed) {
+    summaryEl.textContent = '';
+    return;
+  }
+
+  const type = box.querySelector('.p-type').value;
+  const name = box.querySelector('.p-name').value.trim();
+  const vehicleStr = (type === 'مركبة' || type === 'دراجة نارية') ? getFormattedVehicleString(box) : type;
+  const parts = [vehicleStr, name].filter(Boolean);
+  summaryEl.textContent = parts.length ? `(${parts.join(' - ')})` : '(اضغط للتعديل)';
 }
 
 function toggleVehicleField(selectEl) {
@@ -140,7 +355,8 @@ function toggleVehicleField(selectEl) {
   nameLabel.textContent = isNonVehicle ? 'اسم الطرف / المسؤول:' : 'اسم السائق:';
 }
 
-function removeParty(btn) {
+function removeParty(btn, event) {
+  if (event) event.stopPropagation();
   btn.closest('.party-box').remove();
   reindexParties();
   saveDraft();
@@ -157,6 +373,10 @@ function addCompanion(btn, data = {}) {
   const list = btn.closest('.companions-area').querySelector('.companions-list');
   const compIndex = list.children.length + 1;
 
+  const natChipsHtml = commonNationalities.map(nat =>
+    `<span class="chip" onclick="selectQuickValue(this, '.c-nationality', '${nat}')">${nat}</span>`
+  ).join('');
+
   const compDiv = document.createElement('div');
   compDiv.className = 'companion-item';
   compDiv.innerHTML = `
@@ -164,28 +384,43 @@ function addCompanion(btn, data = {}) {
       <span>مرافق (${compIndex})</span>
       <button type="button" class="btn btn-danger-sm" onclick="removeCompanion(this)">حذف ✕</button>
     </div>
-    <div class="grid-2" style="gap:10px;">
-      <div class="form-group" style="margin-bottom:6px;">
+
+    <div class="grid-2">
+      <div class="form-group">
         <label>اسم المرافق:</label>
         <input type="text" class="c-name" placeholder="الاسم الكامل" value="${escapeHtml(data.name || '')}" />
       </div>
-      <div class="grid-3" style="gap:8px;">
-        <div class="form-group" style="margin-bottom:6px;">
-          <label>العمر:</label>
-          <input type="number" class="c-age" placeholder="العمر" value="${escapeHtml(data.age || '')}" />
-        </div>
-        <div class="form-group" style="margin-bottom:6px;">
-          <label>الجنسية:</label>
-          <input type="text" class="c-nationality" placeholder="الجنسية" value="${escapeHtml(data.nationality || '')}" />
-        </div>
-        <div class="form-group" style="margin-bottom:6px;">
+
+      <div class="form-group">
+        <div class="label-with-action">
           <label>رقم الهوية:</label>
-          <input type="text" class="c-id" placeholder="الهوية" value="${escapeHtml(data.idNumber || '')}" />
+          <span class="id-counter">0/10</span>
         </div>
+        <input type="tel" inputmode="numeric" maxlength="10" class="c-id" placeholder="10 أرقام"
+               value="${escapeHtml(data.idNumber || '')}"
+               oninput="handleIdInput(this)" />
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="form-group">
+        <label>العمر:</label>
+        <input type="tel" inputmode="numeric" maxlength="3" class="c-age" placeholder="العمر"
+               value="${escapeHtml(data.age || '')}"
+               oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+      </div>
+
+      <div class="form-group">
+        <label>الجنسية:</label>
+        <div class="chips">${natChipsHtml}</div>
+        <input type="text" class="c-nationality" placeholder="الجنسية" value="${escapeHtml(data.nationality || '')}" />
       </div>
     </div>
   `;
   list.appendChild(compDiv);
+
+  const compIdInput = compDiv.querySelector('.c-id');
+  if (compIdInput.value) handleIdInput(compIdInput);
   saveDraft();
 }
 
@@ -199,7 +434,7 @@ function removeCompanion(btn) {
 }
 
 /* ==========================================================================
-   3. إنشاء ورقة الإشعار الرسمية للمعاينة والطباعة
+   3. إنشاء ورقة الإشعار الرسمية
    ========================================================================== */
 function formatTimeArabic(time24) {
   if (!time24) return '-';
@@ -229,12 +464,12 @@ function generateNotice() {
   document.querySelectorAll('#partiesContainer .party-box').forEach((box, idx) => {
     const label = ordinalNames[idx] || `رقم ${idx + 1}`;
     const type = box.querySelector('.p-type').value;
-    const vehicle = box.querySelector('.p-vehicle').value.trim() || '-';
+    const isVehicle = (type === 'مركبة' || type === 'دراجة نارية');
+    const vehicle = isVehicle ? (getFormattedVehicleString(box) || '-') : '-';
     const name = box.querySelector('.p-name').value.trim() || '-';
     const age = box.querySelector('.p-age').value.trim() || '-';
     const nationality = box.querySelector('.p-nationality').value.trim() || '-';
     const idNumber = box.querySelector('.p-id').value.trim() || '-';
-    const isVehicle = (type === 'مركبة' || type === 'دراجة نارية');
 
     const compItems = box.querySelectorAll('.companion-item');
     let companionsHtml = '';
@@ -283,33 +518,80 @@ function generateNotice() {
   const preview = document.getElementById('previewSection');
   preview.style.display = 'block';
   preview.scrollIntoView({ behavior: 'smooth' });
-  showToast('تم إنشاء الإشعار بنجاح');
+  showToast('تم إنشاء الإشعار وجاهز للمشاركة');
 }
 
 /* ==========================================================================
-   4. التصدير كصورة PNG ونسخ النص للواتساب
+   4. المشاركة المباشرة للواتساب (Web Share) والحفظ كصورة ونسخ النص
    ========================================================================== */
-function downloadAsImage() {
+async function renderNoticeCanvas() {
   const noticeEl = document.getElementById('printableNotice');
+  return await html2canvas(noticeEl, {
+    scale: 2,
+    backgroundColor: '#ffffff',
+    useCORS: true
+  });
+}
+
+async function shareNoticeImage() {
   if (typeof html2canvas === 'undefined') {
-    showToast('استخدم زر (طباعة / PDF) لحفظ الملف');
     window.print();
     return;
   }
 
-  showToast('جاري تجهيز صورة الإشعار...');
-  html2canvas(noticeEl, {
-    scale: 2,
-    backgroundColor: '#ffffff',
-    useCORS: true
-  }).then(canvas => {
-    const link = document.createElement('a');
-    const dateClean = (document.getElementById('hijriDate').value || 'notice').replace(/[\/\\\s:]/g, '-');
-    link.download = `اشعار-حادث-${dateClean}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-    showToast('تم حفظ صورة الإشعار في جهازك');
-  });
+  showToast('جاري تجهيز الصورة للمشاركة...');
+  try {
+    const canvas = await renderNoticeCanvas();
+    canvas.toBlob(async (blob) => {
+      if (!blob) return;
+      const dateClean = (document.getElementById('hijriDate').value || 'notice').replace(/[\/\\\s:]/g, '-');
+      const fileName = `اشعار-حادث-${dateClean}.png`;
+      const file = new File([blob], fileName, { type: 'image/png' });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: 'إشعار حادث مروري'
+          });
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            downloadBlob(blob, fileName);
+          }
+        }
+      } else {
+        downloadBlob(blob, fileName);
+        showToast('تم تنزيل الصورة (المشاركة المباشرة مدعومة على الجوال)');
+      }
+    }, 'image/png');
+  } catch (e) {
+    showToast('حدث خطأ أثناء تجهيز الصورة');
+  }
+}
+
+function downloadBlob(blob, fileName) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.download = fileName;
+  link.href = url;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function downloadAsImage() {
+  if (typeof html2canvas === 'undefined') {
+    window.print();
+    return;
+  }
+
+  showToast('جاري حفظ الصورة...');
+  const canvas = await renderNoticeCanvas();
+  const link = document.createElement('a');
+  const dateClean = (document.getElementById('hijriDate').value || 'notice').replace(/[\/\\\s:]/g, '-');
+  link.download = `اشعار-حادث-${dateClean}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  showToast('تم حفظ صورة الإشعار في جهازك');
 }
 
 function copyForWhatsApp() {
@@ -328,16 +610,15 @@ function copyForWhatsApp() {
   document.querySelectorAll('#partiesContainer .party-box').forEach((box, idx) => {
     const label = ordinalNames[idx] || `رقم ${idx + 1}`;
     const type = box.querySelector('.p-type').value;
-    const vehicle = box.querySelector('.p-vehicle').value.trim() || '-';
+    const isVehicle = (type === 'مركبة' || type === 'دراجة نارية');
+    const vehicle = isVehicle ? (getFormattedVehicleString(box) || '-') : '-';
     const name = box.querySelector('.p-name').value.trim() || '-';
     const age = box.querySelector('.p-age').value.trim() || '-';
     const nationality = box.querySelector('.p-nationality').value.trim() || '-';
     const idNumber = box.querySelector('.p-id').value.trim() || '-';
 
     text += `*الطرف ${label} (${type}):*\n`;
-    if (type === 'مركبة' || type === 'دراجة نارية') {
-      text += `- المركبة واللوحة: ${vehicle}\n`;
-    }
+    if (isVehicle) text += `- المركبة واللوحة: ${vehicle}\n`;
     text += `- الاسم: ${name}\n`;
     text += `- العمر: ${age} | الجنسية: ${nationality}\n`;
     text += `- رقم الهوية: ${idNumber}\n`;
@@ -379,7 +660,11 @@ function saveDraft() {
 
     parties.push({
       type: box.querySelector('.p-type').value,
-      vehicle: box.querySelector('.p-vehicle').value,
+      vehicleModel: box.querySelector('.p-vehicle-model').value,
+      plateL1: box.querySelector('.p-plate-l1').value,
+      plateL2: box.querySelector('.p-plate-l2').value,
+      plateL3: box.querySelector('.p-plate-l3').value,
+      plateNums: box.querySelector('.p-plate-nums').value,
       name: box.querySelector('.p-name').value,
       age: box.querySelector('.p-age').value,
       nationality: box.querySelector('.p-nationality').value,
@@ -415,7 +700,7 @@ function loadDraft() {
     const container = document.getElementById('partiesContainer');
     container.innerHTML = '';
     if (Array.isArray(draft.parties) && draft.parties.length > 0) {
-      draft.parties.forEach(p => addParty(p));
+      draft.parties.forEach((p, i) => addParty(p, i === draft.parties.length - 1));
     } else {
       addParty();
     }

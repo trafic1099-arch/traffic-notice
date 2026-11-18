@@ -2,8 +2,17 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>نموذج إشعار حادث مروري</title>
+
+  <!-- إعدادات تحويل الموقع إلى تطبيق شاشة كاملة على الجوال (PWA) -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#006c35" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="إشعار حادث" />
+  <link rel="apple-touch-icon" href="logo.png" />
+
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
@@ -21,10 +30,10 @@
         </div>
         <div>
           <h1>نموذج إشعار حادث مروري</h1>
-          <p>نظام إعداد وطباعة إشعارات الحوادث</p>
+          <p>نظام ميداني سريع لإعداد ومشاركة الإشعارات</p>
         </div>
       </div>
-      <button type="button" class="btn btn-light" onclick="resetFormAll()">إشعار جديد</button>
+      <button type="button" class="btn btn-light btn-sm" onclick="resetFormAll()">🔄 إشعار جديد</button>
     </header>
 
     <!-- نموذج الإدخال -->
@@ -32,9 +41,9 @@
 
       <!-- 1. البيانات الأساسية -->
       <div class="card">
-        <h2 class="card-title">البيانات الأساسية للحادث</h2>
+        <h2 class="card-title">📋 البيانات الأساسية للحادث</h2>
 
-        <div class="grid-3">
+        <div class="grid-2">
           <div class="form-group">
             <label for="hijriDate">التاريخ الهجري:</label>
             <input type="text" id="hijriDate" placeholder="1448/05/28 هـ" required />
@@ -44,11 +53,16 @@
             <label for="accidentTime">وقت الحادث:</label>
             <input type="time" id="accidentTime" required />
           </div>
+        </div>
 
-          <div class="form-group">
+        <div class="form-group">
+          <div class="label-with-action">
             <label for="accidentLocation">موقع الحادث:</label>
-            <input type="text" id="accidentLocation" placeholder="أدخل موقع الحادث" required />
+            <button type="button" class="btn-gps" id="gpsBtn" onclick="fetchCurrentLocation()">
+              📍 جلب موقعي الحالي
+            </button>
           </div>
+          <input type="text" id="accidentLocation" placeholder="أدخل موقع الحادث أو اضغط جلب موقعي" required />
         </div>
 
         <div class="form-group">
@@ -57,6 +71,7 @@
             <span class="chip" onclick="appendText('actionsTaken', 'تصادم طرفين وانحراف الطرف الأول')">+ تصادم طرفين وانحراف الأول</span>
             <span class="chip" onclick="appendText('actionsTaken', 'تمت مباشرة الحادث وتخطيط الموقع')">+ مباشرة وتخطيط الموقع</span>
             <span class="chip" onclick="appendText('actionsTaken', 'تمت إزاحة المركبات لتسهيل الحركة المرورية')">+ إزاحة المركبات</span>
+            <span class="chip" onclick="appendText('actionsTaken', 'إحالة الأطراف لاستكمال الإجراءات النظامية')">+ إحالة الأطراف</span>
           </div>
           <textarea id="actionsTaken" placeholder="مثال: تصادم طرفين وانحراف الطرف الأول"></textarea>
         </div>
@@ -65,37 +80,38 @@
       <!-- 2. أطراف الحادث -->
       <div class="card">
         <div class="card-header-row">
-          <h2 class="card-title">أطراف الحادث</h2>
-          <button type="button" class="btn btn-outline" onclick="addParty()">+ إضافة طرف</button>
+          <h2 class="card-title">🚗 أطراف الحادث</h2>
+          <button type="button" class="btn btn-outline btn-sm" onclick="addParty()">+ إضافة طرف</button>
         </div>
         <div id="partiesContainer"></div>
       </div>
 
       <!-- 3. نتائج الحادث -->
       <div class="card">
-        <h2 class="card-title">نتائج الحادث</h2>
+        <h2 class="card-title">🩺 نتائج الحادث</h2>
         <div class="form-group">
           <label for="accidentResults">نتائج الحادث (مع ذكر ملخص التقرير الطبي):</label>
           <div class="chips">
             <span class="chip" onclick="appendText('accidentResults', 'تلفيات مادية بالمركبات ولا توجد إصابات ولله الحمد.')">+ تلفيات مادية بدون إصابات</span>
             <span class="chip" onclick="appendText('accidentResults', 'إصابة بسيطة وتم تقديم الإسعافات الأولية بالموقع.')">+ إصابة بسيطة بالموقع</span>
             <span class="chip" onclick="appendText('accidentResults', 'نقل المصاب إلى المستشفى عن طريق الهلال الأحمر وحالته مستقرة.')">+ نقل للمستشفى (مستقرة)</span>
+            <span class="chip" onclick="appendText('accidentResults', 'تلفيات في الممتلكات العامة.')">+ تلفيات ممتلكات عامة</span>
           </div>
           <textarea id="accidentResults" placeholder="أدخل نتائج الحادث مع ذكر ملخص التقرير الطبي"></textarea>
         </div>
       </div>
 
-      <button type="submit" class="btn btn-primary btn-full">إنشاء الإشعار</button>
     </form>
 
     <!-- ورقة المعاينة والطباعة -->
     <section id="previewSection" style="display:none;">
       <div class="export-bar no-print">
-        <span>معاينة الإشعار الجاهز</span>
+        <span>📄 الإشعار الجاهز</span>
         <div class="export-actions">
-          <button type="button" class="btn btn-primary" onclick="window.print()">طباعة / PDF</button>
-          <button type="button" class="btn btn-outline" onclick="downloadAsImage()">حفظ كصورة PNG</button>
-          <button type="button" class="btn btn-light" onclick="copyForWhatsApp()">نسخ للواتساب</button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="shareNoticeImage()">📲 مشاركة الصورة مباشرة</button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="downloadAsImage()">📸 حفظ كصورة</button>
+          <button type="button" class="btn btn-light btn-sm" onclick="window.print()">🖨️ طباعة / PDF</button>
+          <button type="button" class="btn btn-light btn-sm" onclick="copyForWhatsApp()">📋 نسخ نص</button>
         </div>
       </div>
 
@@ -142,6 +158,12 @@
       </div>
     </section>
 
+  </div>
+
+  <!-- شريط أزرار سفلي ثابت بمتناول الإبهام على الجوال -->
+  <div class="sticky-bottom-bar no-print">
+    <button type="button" class="btn btn-outline" onclick="addParty()">+ إضافة طرف</button>
+    <button type="button" class="btn btn-primary" onclick="generateNotice()">✅ إنشاء الإشعار</button>
   </div>
 
   <div id="toast" class="toast"></div>
