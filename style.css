@@ -1,0 +1,548 @@
+/* ==========================================================================
+   1. متغيرات الألوان الأساسية (تقدر تعدل أي لون من هنا مستقبلاً)
+   ========================================================================== */
+:root {
+  --primary: #006c35;          /* الأخضر الرسمي */
+  --primary-dark: #004d26;     /* أخضر داكن */
+  --primary-light: #e8f5ee;    /* خلفية خضراء فاتحة */
+  --accent: #b89548;           /* ذهبي رسمي */
+  --bg-page: #f1f5f9;          /* خلفية الصفحة */
+  --bg-card: #ffffff;          /* خلفية البطاقات */
+  --text-main: #1e293b;        /* لون النص الأساسي */
+  --text-muted: #64748b;       /* لون النص الفرعي */
+  --border: #cbd5e1;           /* لون الحدود */
+  --danger: #dc2626;           /* لون الحذف */
+  --radius: 10px;
+  --shadow: 0 4px 16px rgba(15, 23, 42, 0.07);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Tajawal', 'Segoe UI', Tahoma, Arial, sans-serif;
+}
+
+body {
+  background-color: var(--bg-page);
+  color: var(--text-main);
+  line-height: 1.6;
+  padding: 20px 14px 50px;
+}
+
+.container {
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+/* ==========================================================================
+   2. ترويسة الصفحة والشعار
+   ========================================================================== */
+.top-header {
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 18px 24px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-bottom: 4px solid var(--accent);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logo-box {
+  width: 72px;
+  height: 72px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  flex-shrink: 0;
+}
+
+.logo-box img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.top-header h1 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin-bottom: 2px;
+}
+
+.top-header p {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+/* ==========================================================================
+   3. البطاقات والحقول
+   ========================================================================== */
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 22px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+  border: 1px solid #e2e8f0;
+}
+
+.card-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--primary-light);
+}
+
+.card-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--primary-light);
+}
+
+.card-header-row .card-title {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 640px) {
+  .grid-2,
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+  .top-header {
+    justify-content: center;
+    text-align: center;
+  }
+  .brand {
+    flex-direction: column;
+  }
+}
+
+.form-group {
+  margin-bottom: 14px;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 700;
+  font-size: 0.92rem;
+  margin-bottom: 6px;
+  color: var(--text-main);
+}
+
+input[type="text"],
+input[type="number"],
+input[type="time"],
+select,
+textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: var(--text-main);
+  background: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0, 108, 53, 0.12);
+}
+
+textarea {
+  min-height: 82px;
+  resize: vertical;
+}
+
+/* أزرار العبارات الجاهزة */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.chip {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  border: 1px solid #b7e1c9;
+  border-radius: 20px;
+  padding: 4px 11px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.chip:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* ==========================================================================
+   4. بطاقات الأطراف والمرافقين
+   ========================================================================== */
+.party-box {
+  border: 1.5px solid #cbd5e1;
+  border-right: 4px solid var(--primary);
+  border-radius: 9px;
+  padding: 16px;
+  margin-bottom: 14px;
+  background: #fafcfb;
+}
+
+.party-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed #cbd5e1;
+}
+
+.party-badge {
+  background: var(--primary);
+  color: #fff;
+  padding: 3px 12px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.94rem;
+}
+
+.companions-area {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed #cbd5e1;
+}
+
+.companion-item {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 10px;
+}
+
+.companion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+
+/* ==========================================================================
+   5. الأزرار
+   ========================================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+}
+
+.btn-outline {
+  background: #fff;
+  color: var(--primary-dark);
+  border: 1.5px solid var(--primary);
+}
+
+.btn-outline:hover {
+  background: var(--primary-light);
+}
+
+.btn-light {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.btn-light:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 0.84rem;
+}
+
+.btn-danger-sm {
+  background: #fee2e2;
+  color: var(--danger);
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  border-radius: 6px;
+}
+
+.btn-danger-sm:hover {
+  background: var(--danger);
+  color: #fff;
+}
+
+.btn-full {
+  width: 100%;
+  padding: 13px 20px;
+  font-size: 1.05rem;
+}
+
+/* ==========================================================================
+   6. ورقة المعاينة والطباعة الرسمية
+   ========================================================================== */
+#previewSection {
+  margin-top: 24px;
+}
+
+.export-bar {
+  background: #1e293b;
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: var(--radius) var(--radius) 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-weight: 700;
+}
+
+.export-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+#printableNotice {
+  background: #ffffff;
+  border: 2px solid #1e293b;
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  padding: 26px 28px;
+  color: #0f172a;
+}
+
+.doc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 3px double var(--primary);
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+  gap: 14px;
+}
+
+.doc-right {
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.7;
+  color: var(--primary-dark);
+}
+
+.doc-center {
+  text-align: center;
+}
+
+.print-logo {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  margin: 0 auto 6px;
+  display: block;
+}
+
+.doc-center h2 {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #0f172a;
+  background: var(--primary-light);
+  padding: 3px 18px;
+  border-radius: 6px;
+  border: 1px solid #b7e1c9;
+}
+
+.doc-left {
+  text-align: left;
+  font-size: 0.88rem;
+  line-height: 1.8;
+}
+
+.doc-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+  font-size: 0.94rem;
+}
+
+.doc-table th,
+.doc-table td {
+  border: 1px solid #94a3b8;
+  padding: 9px 12px;
+  text-align: right;
+  vertical-align: top;
+}
+
+.doc-table th {
+  background-color: #f1f5f9;
+  font-weight: 700;
+  color: #1e293b;
+  width: 22%;
+}
+
+.party-doc-block {
+  border: 1.5px solid #94a3b8;
+  border-radius: 6px;
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+
+.party-doc-title {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 700;
+  padding: 6px 12px;
+  font-size: 0.95rem;
+}
+
+.party-doc-block .doc-table {
+  margin-bottom: 0;
+}
+
+.party-doc-block .doc-table tr:first-child th,
+.party-doc-block .doc-table tr:first-child td {
+  border-top: none;
+}
+
+.companions-doc-list {
+  background: #f8fafc;
+  padding: 8px 12px;
+  border-top: 1px solid #94a3b8;
+  font-size: 0.88rem;
+}
+
+.doc-footer {
+  margin-top: 22px;
+  padding-top: 12px;
+  border-top: 1px solid #cbd5e1;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+/* إشعار منبثق */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: #0f172a;
+  color: #fff;
+  padding: 10px 22px;
+  border-radius: 30px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 9999;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* ==========================================================================
+   7. إعدادات الطباعة (تُخفي النموذج وتطبع الورقة الرسمية مع الشعار فقط)
+   ========================================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+
+  body {
+    background: #fff !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .container {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  #previewSection {
+    display: block !important;
+    margin-top: 0 !important;
+  }
+
+  #printableNotice {
+    border: 2px solid #000 !important;
+    border-radius: 0 !important;
+    padding: 18px !important;
+  }
+}
